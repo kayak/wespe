@@ -1,0 +1,2 @@
+facebook_business==3.1.2
+requests==2.19.1
