@@ -45,7 +45,7 @@ setup(
     long_description=readme + '\n\n' + history,
     include_package_data=True,
     name='wespe',
-    packages=find_packages(include=['wespe.*']),
+    packages=find_packages(include=['wespe', 'wespe.*']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
