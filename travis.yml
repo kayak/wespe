@@ -1,0 +1,16 @@
+language: python
+
+python:
+    - "3.4"
+    - "3.6"
+
+install:
+    - "python setup.py install"
+    - "pip install coverage"
+    - "pip install coveralls"
+
+script:
+    - "coverage run --source=wespe setup.py test"
+
+after_success:
+    coveralls
