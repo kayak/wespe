@@ -79,7 +79,7 @@ Crafted with ♥ in Berlin.
 .. |Docs| image:: https://readthedocs.org/projects/wespe/badge/?version=latest
    :target: http://wespe.readthedocs.io/en/latest/
 .. |PyPi| image:: https://img.shields.io/pypi/v/wespe.svg?style=flat
-   :target: https://pypi.python.org/pypi/pypika
+   :target: https://pypi.python.org/pypi/wespe
 .. |License| image:: https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000
    :target: http://www.apache.org/licenses/LICENSE-2.0
 
