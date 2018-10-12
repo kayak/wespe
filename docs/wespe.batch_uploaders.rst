@@ -4,10 +4,10 @@ wespe.batch\_uploaders package
 Submodules
 ----------
 
-wespe.batch\_uploaders.error module
------------------------------------
+wespe.batch\_uploaders.requests module
+--------------------------------------
 
-.. automodule:: wespe.batch_uploaders.error
+.. automodule:: wespe.batch_uploaders.requests
     :members:
     :undoc-members:
     :show-inheritance:
