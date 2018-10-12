@@ -37,8 +37,8 @@ class FacebookBatchResponse(BaseResponse):
         self.request = request
         self.response = response
 
-    def __str__(self):
-        return 'FacebookResponse: {}. When using params: {}.'.format(self.data, self.request.get_params())
+    def __repr__(self):
+        return 'FacebookResponse:\n\n{}\n\nWhen using params: {}.'.format(self.data, self.request.get_params())
 
 
 class FacebookBatchRequestError(BaseRequestError):
@@ -46,14 +46,14 @@ class FacebookBatchRequestError(BaseRequestError):
         super().__init__(
             description=request_error.api_error_message(),
             is_transient=request_error.api_transient_error(),
-            data=request_error.error().body()['error']
+            data=request_error.body()
         )
 
         self.request = request
         self.request_error = request_error
 
-    def __str__(self):
-        return 'FacebookRequestError: {}. When using params: {}.'.format(self.data, self.request.get_params())
+    def __repr__(self):
+        return 'FacebookRequestError:{}\nWhen using params: {}.'.format(self.request_error, self.request.get_params())
 
 
 class FacebookBatch:
@@ -163,10 +163,12 @@ class FacebookBatchUploader:
             self._batches.append(batch)
             batch.execute()
 
-        failed_requests = list(self.errors)
+        errors = list(self.errors)
 
-        if any(failed_requests):
-            exception_msg = '{} requests failed out of {}'.format(len(failed_requests), num_requests)
+        if any(errors):
+            exception_msg = '{} requests failed out of {}\n\n{}'.format(
+                len(errors), num_requests, errors
+            )
             raise BatchExecutionError(exception_msg)
 
     @property

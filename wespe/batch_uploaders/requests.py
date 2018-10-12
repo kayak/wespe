@@ -55,5 +55,5 @@ class BaseRequestError:
     def __eq__(self, other):
         return self._data == other._data
 
-    def __str__(self):
+    def __repr__(self):
         return self.data
