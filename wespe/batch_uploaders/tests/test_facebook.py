@@ -35,6 +35,9 @@ class TestFacebookBatch(TestCase):
         with self.assertRaises(NoFacebookRequestProvidedError):
             FacebookBatch(requests=[], api=self.api)
 
+    def test_constructor_does_not_raise_TooManyRequestsPerBatchError_when_exactly_50_requests_were_provided(self):
+        FacebookBatch(requests=[MagicMock()] * 50, api=self.api)
+
     def test_constructor_raises_TooManyRequestsPerBatchError_when_more_than_50_requests_were_provided(self):
         with self.assertRaises(TooManyRequestsPerBatchError):
             FacebookBatch(requests=[MagicMock()] * 51, api=self.api)
@@ -108,6 +111,13 @@ class TestFacebookBatchUploader(TestCase):
     def test_execute_calls_execute_in_FacebookBatch(self, mock_execute):
         self.batch_uploader.execute()
         mock_execute.assert_called_once_with()
+
+    @patch.object(FacebookBatch, 'execute')
+    def test_execute_generates_a_single_batch_for_50_requests_when_using_default_chunk_size(self, mock_execute):
+        requests = [MagicMock()] * 50
+        batch_uploader = FacebookBatchUploader(requests=requests, api=self.api)
+        batch_uploader.execute()
+        self.assertEqual(len(batch_uploader._batches), round(len(self.requests) / 50))
 
     @patch.object(FacebookBatch, 'execute')
     def test_execute_generates_as_many_batches_as_the_rounded_number_of_requests_per_chunk_size(self, mock_execute):

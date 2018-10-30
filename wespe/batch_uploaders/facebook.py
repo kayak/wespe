@@ -63,9 +63,9 @@ class FacebookBatch:
 
         num_requests = len(requests)
 
-        if num_requests >= 50:
+        if num_requests > 50:
             # See more on https://developers.facebook.com/docs/graph-api/making-multiple-requests
-            raise TooManyRequestsPerBatchError('A maximum of 50 requests per batch is supported')
+            raise TooManyRequestsPerBatchError(f'A maximum of 50 requests per batch is supported')
 
         self._batch = api.new_batch()
         self._requests = requests
