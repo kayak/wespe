@@ -36,7 +36,7 @@ To install |Brand| run the following command:
 .. _installation_end:
 
 
-.. include:: USAGE.rst
+.. include:: ./USAGE.rst
 
 
 License

@@ -6,6 +6,9 @@ All steps from now on will assume you've already set the default api connection 
 possible to set one on the fly by providing the api kwarg in FacebookBatchUploader's constructor.
 
 
+.. code-block:: python
+   :linenos:
+
     from wespe.batch_uploaders import FacebookBatchUploader
 
     # There is no request limit. If necessary Wespe will coordinate the execution of multiple FacebookAdsApiBatch
