@@ -1,3 +1,4 @@
-facebook_business==3.1.2
+facebook_business==3.2.2
 requests==2.19.1
+tenacity==5.0.2
 typing==3.6.6
