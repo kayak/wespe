@@ -17,9 +17,6 @@ from wespe import (
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
 with open('requirements.txt') as requirements_file:
     requirements = requirements_file.read().splitlines()
 
@@ -42,14 +39,14 @@ setup(
     keywords=('wespe adtech marketing facebook google bing yandex facebook'),
     description="Batching ad tech providers’ operations for humans",
     install_requires=requirements,
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     include_package_data=True,
     name='wespe',
     packages=find_packages(include=['wespe', 'wespe.*'], exclude=['*.tests', '*.tests.*']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/x8lucas8x/wespe',
+    url='https://github.com/kayak/wespe',
     version=__version__,
     zip_safe=False,
 )
