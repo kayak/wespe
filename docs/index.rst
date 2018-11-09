@@ -3,14 +3,13 @@ Welcome to Wespe's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
    readme
    installation
    usage
    modules
    contributing
-   history
 
 Indices and tables
 ==================
