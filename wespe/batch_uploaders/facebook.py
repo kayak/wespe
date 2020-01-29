@@ -53,7 +53,9 @@ class FacebookBatchRequestError(BaseRequestError):
     def __init__(self, request: FacebookRequest, request_error: FacebookRequestError):
         super().__init__(
             description=request_error.api_error_message(),
-            is_transient=request_error.api_transient_error(),
+            # Generally 500 responses have no is_transient field in payload, even though they are transient
+            # in nature.
+            is_transient=request_error.api_transient_error() or request_error.http_status() == 500,
             data=request_error.body(),
         )
 
