@@ -10,3 +10,5 @@ sphinx-rtd-theme==0.4.1
 twine==3.1.1
 pytest==5.3.4
 pytest-runner==5.2
+black==19.10b0
+flake8-black==0.1.1
