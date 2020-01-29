@@ -38,15 +38,15 @@ logger = logging.getLogger(__name__)
 
 class FacebookBatchResponse(BaseResponse):
     def __init__(self, request: FacebookRequest, response: FacebookResponse):
-        super().__init__(
-            data=response.json()
-        )
+        super().__init__(data=response.json())
 
         self.request = request
         self.response = response
 
     def __repr__(self):
-        return 'FacebookResponse:\n\n{}\n\nWhen using params: {}.'.format(self.data, self.request.get_params())
+        return "FacebookResponse:\n\n{}\n\nWhen using params: {}.".format(
+            self.data, self.request.get_params()
+        )
 
 
 class FacebookBatchRequestError(BaseRequestError):
@@ -54,32 +54,42 @@ class FacebookBatchRequestError(BaseRequestError):
         super().__init__(
             description=request_error.api_error_message(),
             is_transient=request_error.api_transient_error(),
-            data=request_error.body()
+            data=request_error.body(),
         )
 
         self.request = request
         self.request_error = request_error
 
     def __repr__(self):
-        return 'FacebookRequestError:{}\nWhen using params: {}.'.format(self.request_error, self.request.get_params())
+        return "FacebookRequestError:{}\nWhen using params: {}.".format(
+            self.request_error, self.request.get_params()
+        )
 
 
 class FacebookBatch:
     # Batch retrying parameters for transient errors
     MAX_ATTEMPTS = 5  # The max number of attempts a batch execution should retry
     WAIT_EXPONENTIAL_MULTIPLIER = 1  # The exponential multiplier
-    WAIT_EXPONENTIAL_MIN_IN_SECONDS = 0  # The minimum waiting time derived from the exponential multiplier
-    WAIT_EXPONENTIAL_MAX_IN_SECONDS = 10  # The maximum waiting time derived from the exponential multiplier
+    WAIT_EXPONENTIAL_MIN_IN_SECONDS = (
+        0  # The minimum waiting time derived from the exponential multiplier
+    )
+    WAIT_EXPONENTIAL_MAX_IN_SECONDS = (
+        10  # The maximum waiting time derived from the exponential multiplier
+    )
 
     def __init__(self, requests: List[FacebookRequest], api: FacebookAdsApi):
         if not requests:
-            raise NoFacebookRequestProvidedError('At least one facebook request must be provided')
+            raise NoFacebookRequestProvidedError(
+                "At least one facebook request must be provided"
+            )
 
         num_requests = len(requests)
 
         if num_requests > 50:
             # See more on https://developers.facebook.com/docs/graph-api/making-multiple-requests
-            raise TooManyRequestsPerBatchError('A maximum of 50 requests per batch is supported')
+            raise TooManyRequestsPerBatchError(
+                "A maximum of 50 requests per batch is supported"
+            )
 
         self._api = api
         self._batch = None
@@ -112,8 +122,13 @@ class FacebookBatch:
             if response is None:
                 self._batch.add_request(
                     request,
-                    success=partial(self._default_success_callback, request_index=request_index),
-                    failure=partial(self._default_failure_callback, request_index=request_index))
+                    success=partial(
+                        self._default_success_callback, request_index=request_index
+                    ),
+                    failure=partial(
+                        self._default_failure_callback, request_index=request_index
+                    ),
+                )
 
         self._batch.execute()
 
@@ -133,10 +148,11 @@ class FacebookBatch:
         retry_settings.wait = wait_exponential(
             multiplier=self.WAIT_EXPONENTIAL_MULTIPLIER,
             min=self.WAIT_EXPONENTIAL_MIN_IN_SECONDS,
-            max=self.WAIT_EXPONENTIAL_MAX_IN_SECONDS)
+            max=self.WAIT_EXPONENTIAL_MAX_IN_SECONDS,
+        )
 
     def _default_failure_callback(
-        self, response: FacebookResponse, request_index: int, object_id: int=None
+        self, response: FacebookResponse, request_index: int, object_id: int = None
     ):
         """
         A method that can be used to raise exceptions when the batch object is used for bulk operations.
@@ -149,21 +165,23 @@ class FacebookBatch:
         :param object_id: (Optional) The ID of the object being updated.
         """
         request = self._requests[request_index]
-        batch__error = FacebookBatchRequestError(request=request, request_error=response.error())
+        batch__error = FacebookBatchRequestError(
+            request=request, request_error=response.error()
+        )
         self._responses[request_index] = None
         self._errors[request_index] = batch__error
 
-        error_msg = ['#{} -'.format(request_index)]
+        error_msg = ["#{} -".format(request_index)]
 
         if object_id:
-            error_msg.append('Error updating object with id [{}].'.format(object_id))
+            error_msg.append("Error updating object with id [{}].".format(object_id))
 
         error_msg.append(str(batch__error))
 
-        logger.error(' '.join(error_msg))
+        logger.error(" ".join(error_msg))
 
     def _default_success_callback(
-        self, response: FacebookResponse, request_index: int, object_id: int=None
+        self, response: FacebookResponse, request_index: int, object_id: int = None
     ):
         """
         A method that can be used to log when the batch object has completed successfully.
@@ -180,21 +198,23 @@ class FacebookBatch:
         self._errors[request_index] = None
 
         if object_id is None:
-            object_id = response.json().get('id')
+            object_id = response.json().get("id")
 
-        logger.debug('Request #{}: Object with id [{}] updated successfully!'.format(
-            request_index, str(object_id)
-        ))
+        logger.debug(
+            "Request #{}: Object with id [{}] updated successfully!".format(
+                request_index, str(object_id)
+            )
+        )
 
 
 class FacebookBatchUploader:
-    def __init__(self, requests: List[FacebookRequest], api: FacebookAdsApi=None):
+    def __init__(self, requests: List[FacebookRequest], api: FacebookAdsApi = None):
         self.api = api or FacebookAdsApi.get_default_api()
 
         self._requests = requests
         self._batches = []
 
-    def execute(self, chunk_size: int=50):
+    def execute(self, chunk_size: int = 50):
         """
         Execute all requests in batches of chunk_size amount.
 
@@ -207,10 +227,10 @@ class FacebookBatchUploader:
         num_requests = len(self.requests)
 
         if chunk_size < 1 or chunk_size > 50:
-            raise InvalidValueError('Chunk size must be between 1 and 50')
+            raise InvalidValueError("Chunk size must be between 1 and 50")
 
         for i in range(0, num_requests, chunk_size):
-            batch = FacebookBatch(self.requests[i:i + chunk_size], api=self.api)
+            batch = FacebookBatch(self.requests[i : i + chunk_size], api=self.api)
             self._batches.append(batch)
 
             try:
@@ -221,7 +241,7 @@ class FacebookBatchUploader:
         errors = list(self.errors)
 
         if any(errors):
-            exception_msg = '{} requests failed out of {}\n\n{}'.format(
+            exception_msg = "{} requests failed out of {}\n\n{}".format(
                 len(errors), num_requests, errors
             )
             raise BatchExecutionError(exception_msg)
@@ -262,8 +282,16 @@ class FacebookBatchUploader:
                 yield response
 
     @property
-    def items(self) -> Generator[
-        Tuple[FacebookRequest, Union[None, FacebookBatchResponse], Union[None, FacebookBatchRequestError]], None, None
+    def items(
+        self,
+    ) -> Generator[
+        Tuple[
+            FacebookRequest,
+            Union[None, FacebookBatchResponse],
+            Union[None, FacebookBatchRequestError],
+        ],
+        None,
+        None,
     ]:
         """
         Returns a list of tuples shaped as FacebookRequest instance and its respective response/error.

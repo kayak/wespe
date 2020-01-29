@@ -2,6 +2,6 @@
 
 """Top-level package for Wespe."""
 
-__author__ = 'Lucas Lira Gomes'
-__email__ = 'llira@kayak.com'
-__version__ = '0.1.6'
+__author__ = "Lucas Lira Gomes"
+__email__ = "llira@kayak.com"
+__version__ = "0.1.6"
