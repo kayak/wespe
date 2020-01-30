@@ -4,4 +4,4 @@
 
 __author__ = "Lucas Lira Gomes"
 __email__ = "llira@kayak.com"
-__version__ = "__version__ = '0.2.0'"
+__version__ = "0.2.0"
