@@ -1,9 +1,7 @@
 import logging
 from functools import partial
 from typing import (
-    Generator,
     List,
-    Tuple,
     Union,
 )
 
@@ -12,60 +10,22 @@ from facebook_business.api import (
     FacebookRequest,
     FacebookResponse,
 )
-from facebook_business.exceptions import FacebookRequestError
 from tenacity import (
-    RetryError,
     retry,
     retry_if_result,
     stop_after_attempt,
     wait_exponential,
 )
 
+from batch_uploaders.facebook.retries import should_retry_facebook_batch
 from wespe.exceptions import (
-    BatchExecutionError,
-    InvalidValueError,
     NoFacebookRequestProvidedError,
     TooManyRequestsPerBatchError,
 )
-from .requests import (
-    BaseRequestError,
-    BaseResponse,
-)
-from .retries import should_retry_facebook_batch
+from .facebook_batch_request_error import FacebookBatchRequestError
+from .facebook_batch_response import FacebookBatchResponse
 
 logger = logging.getLogger(__name__)
-
-
-class FacebookBatchResponse(BaseResponse):
-    def __init__(self, request: FacebookRequest, response: FacebookResponse):
-        super().__init__(data=response.json())
-
-        self.request = request
-        self.response = response
-
-    def __repr__(self):
-        return "FacebookResponse:\n\n{}\n\nWhen using params: {}.".format(
-            self.data, self.request.get_params()
-        )
-
-
-class FacebookBatchRequestError(BaseRequestError):
-    def __init__(self, request: FacebookRequest, request_error: FacebookRequestError):
-        super().__init__(
-            description=request_error.api_error_message(),
-            # Generally 500 responses have no is_transient field in payload, even though they are transient
-            # in nature.
-            is_transient=request_error.api_transient_error() or request_error.http_status() == 500,
-            data=request_error.body(),
-        )
-
-        self.request = request
-        self.request_error = request_error
-
-    def __repr__(self):
-        return "FacebookRequestError:{}\nWhen using params: {}.".format(
-            self.request_error, self.request.get_params()
-        )
 
 
 class FacebookBatch:
@@ -239,101 +199,3 @@ class FacebookBatch:
                 request_index, str(object_id)
             )
         )
-
-
-class FacebookBatchUploader:
-    def __init__(self, requests: List[FacebookRequest], api: FacebookAdsApi = None):
-        self.api = api or FacebookAdsApi.get_default_api()
-
-        self._requests = requests
-        self._batches = []
-
-    def execute(self, chunk_size: int = 50) -> 'FacebookBatchUploader':
-        """
-        Execute all requests in batches of chunk_size amount.
-
-        :param chunk_size:
-            (Optional) The amount of requests per chunk. Keep in mind this value should be between 1 and 50, otherwise
-            an exception will be raised. Defaults to 50.
-        :raises: BatchExecutionError: when one or more requests failed.
-        :return: self.
-        """
-        num_requests = len(self.requests)
-
-        if chunk_size < 1 or chunk_size > 50:
-            raise InvalidValueError("Chunk size must be between 1 and 50")
-
-        for i in range(0, num_requests, chunk_size):
-            batch = FacebookBatch(self.requests[i : i + chunk_size], api=self.api)
-            self._batches.append(batch)
-
-            try:
-                batch.execute()
-            except RetryError:
-                pass
-
-        errors = list(self.errors)
-
-        if any(errors):
-            exception_msg = "{} requests failed out of {}\n\n{}".format(
-                len(errors), num_requests, errors
-            )
-            raise BatchExecutionError(exception_msg)
-
-        return self
-
-    @property
-    def requests(self) -> List[FacebookRequest]:
-        """
-        Returns all FacebookRequest instances.
-
-        :return: a list of FacebookRequest instances.
-        """
-        return self._requests
-
-    @property
-    def responses(self) -> Generator[Union[None, FacebookBatchResponse], None, None]:
-        """
-        Returns the responses for the executed FacebookRequest instances. The amount and order of elements will
-        be the same as of FacebookRequest instances. FacebookRequest with errors will have None as their value
-        in the respective index.
-
-        :return: a list of FacebookBatchResponse instance and/or None.
-        """
-        for batch in self._batches:
-            for response in batch.responses:
-                yield response
-
-    @property
-    def errors(self) -> Generator[Union[None, FacebookBatchRequestError], None, None]:
-        """
-        Returns the errors for the executed FacebookRequest instances. The amount and order of elements will
-        be the same as of FacebookRequest instances. FacebookRequest without errors will have None as their value
-        in the respective index.
-
-        :return: a generator of FacebookBatchRequestError instances and/or None.
-        """
-        for batch in self._batches:
-            for response in batch.errors:
-                yield response
-
-    @property
-    def items(
-        self,
-    ) -> Generator[
-        Tuple[
-            FacebookRequest,
-            Union[None, FacebookBatchResponse],
-            Union[None, FacebookBatchRequestError],
-        ],
-        None,
-        None,
-    ]:
-        """
-        Returns a list of tuples shaped as FacebookRequest instance and its respective response/error.
-
-        :return: a list of tuples shaped as (request, FacebookBatchResponse or None, FacebookBatchRequestError
-                 instance or None).
-        """
-        for request, response, error in zip(self.requests, self.responses, self.errors):
-            yield request, response, error

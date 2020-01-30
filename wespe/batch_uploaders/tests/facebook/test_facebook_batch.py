@@ -127,7 +127,7 @@ class TestFacebookBatch(TestCase):
         )
 
     @patch(
-        "wespe.batch_uploaders.facebook.should_retry_facebook_batch", return_value=True
+        "wespe.batch_uploaders.facebook.facebook_batch.should_retry_facebook_batch", return_value=True
     )
     def test_execute_raises_RetryError_when_should_retry_is_True_for_all_attempts(
         self, mock_should_retry
@@ -136,7 +136,7 @@ class TestFacebookBatch(TestCase):
             self.batch.execute()
 
     @patch(
-        "wespe.batch_uploaders.facebook.should_retry_facebook_batch", return_value=True
+        "wespe.batch_uploaders.facebook.facebook_batch.should_retry_facebook_batch", return_value=True
     )
     def test_execute_retries_for_max_attempts_when_should_retry_is_True_for_all_of_them(
         self, mock_should_retry
