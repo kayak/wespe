@@ -122,8 +122,33 @@ class TestFacebookBatch(TestCase):
             self.batch._responses[request_index] = MagicMock()
 
         self.batch.execute()
+
+        self.batch._batch.add_request.assert_called_once_with(self.requests[-1], success=ANY, failure=ANY)
+
+    def test_execute_calls_add_request_on_batch_ignores_requests_that_have_a_non_transient_error_already(
+        self,
+    ):
+        for request_index, _ in enumerate(self.requests[:-1]):
+            self.batch._errors[request_index] = MagicMock()
+            self.batch._errors[request_index].is_transient = False
+
+        self.batch.execute()
+
+        self.batch._batch.add_request.assert_called_once_with(self.requests[-1], success=ANY, failure=ANY)
+
+    @patch(
+        "wespe.batch_uploaders.facebook.facebook_batch.should_retry_facebook_batch", return_value=False
+    )
+    def test_execute_calls_add_request_on_batch_execute_requests_that_have_a_transient_error_already(
+        self, mock_should_retry,
+    ):
+        for request_index, _ in enumerate(self.requests[:-1]):
+            self.batch._errors[request_index] = MagicMock()
+            self.batch._errors[request_index].is_transient = True
+
+        self.batch.execute()
         self.batch._batch.add_request.assert_has_calls(
-            [call(self.requests[-1], success=ANY, failure=ANY)]
+            [call(request, success=ANY, failure=ANY) for request in self.requests]
         )
 
     @patch(
