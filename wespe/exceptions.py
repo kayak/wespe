@@ -2,6 +2,7 @@ class BaseException(Exception):
     """
     All errors specific to to this library will be subclassed from BaseException.
     """
+
     pass
 
 

@@ -4,7 +4,7 @@ def should_retry_facebook_batch(facebook_batch) -> bool:
 
     :return: a boolean.
     """
-    return all(
-        error.request_error.api_transient_error() if error else False
-        for error in facebook_batch._errors
+    return any(
+        error.is_transient if error else False
+        for error in facebook_batch.errors
     )
