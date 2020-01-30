@@ -71,20 +71,20 @@ set up your fork for local development::
     $ cd wespe/
     $ python setup.py develop
 
-4. Create a branch for local development::
+4. Install the commit hooks, which includes an auto formatter::
+
+    $ pre-commit install
+
+5. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox::
+6. When you're done making changes, check that your changes pass for all python versions that we support,
+including flake8 rules, by running tox::
 
-    $ flake8 wespe tests
-    $ python setup.py test or py.test
     $ tox
-
-   To get flake8 and tox, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub::
 
