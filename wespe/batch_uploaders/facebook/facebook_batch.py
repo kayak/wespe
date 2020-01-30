@@ -1,29 +1,17 @@
 import logging
 from functools import partial
-from typing import (
-    List,
-    Union,
-)
+from typing import List, Union
 
-from facebook_business.api import (
-    FacebookAdsApi,
-    FacebookRequest,
-    FacebookResponse,
-)
-from tenacity import (
-    retry,
-    retry_if_result,
-    stop_after_attempt,
-    wait_exponential,
-)
+from facebook_business.api import FacebookAdsApi, FacebookRequest, FacebookResponse
+from tenacity import retry, retry_if_result, stop_after_attempt, wait_exponential
 
-from batch_uploaders.facebook.retries import should_retry_facebook_batch
 from wespe.exceptions import (
     NoFacebookRequestProvidedError,
     TooManyRequestsPerBatchError,
 )
 from .facebook_batch_request_error import FacebookBatchRequestError
 from .facebook_batch_response import FacebookBatchResponse
+from .retries import should_retry_facebook_batch
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +79,7 @@ class FacebookBatch:
         return self._errors
 
     @retry()
-    def execute(self) -> 'FacebookBatch':
+    def execute(self) -> "FacebookBatch":
         """
         Execute all requests. This method will be retried for any failed transient errors. For such we employ an
         exponential backoff approach.
