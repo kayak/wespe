@@ -73,7 +73,7 @@ class FacebookBatch:
     MAX_ATTEMPTS = 5  # The max number of attempts a batch execution should retry
     WAIT_EXPONENTIAL_MULTIPLIER = 1  # The exponential multiplier
     WAIT_EXPONENTIAL_MIN_IN_SECONDS = (
-        0  # The minimum waiting time derived from the exponential multiplier
+        1  # The minimum waiting time derived from the exponential multiplier
     )
     WAIT_EXPONENTIAL_MAX_IN_SECONDS = (
         10  # The maximum waiting time derived from the exponential multiplier
@@ -99,10 +99,41 @@ class FacebookBatch:
         self._responses = [None] * num_requests
         self._errors = [None] * num_requests
 
-    @retry()
-    def execute(self):
+    @property
+    def requests(self) -> List[FacebookRequest]:
         """
-        Execute all requests. This method will be retried when all failed requests are transient. For such we employ an
+        Returns all FacebookRequest instances.
+
+        :return: a list of FacebookRequest instances.
+        """
+        return self._requests
+
+    @property
+    def responses(self) -> List[Union[None, FacebookBatchResponse]]:
+        """
+        Returns the responses for the executed FacebookRequest instances. The amount and order of elements will
+        be the same as of FacebookRequest instances. FacebookRequest with errors will have None as their value
+        in the respective index.
+
+        :return: a list of FacebookBatchResponse instance and/or None.
+        """
+        return self._responses
+
+    @property
+    def errors(self) -> List[Union[None, FacebookBatchRequestError]]:
+        """
+        Returns the errors for the executed FacebookRequest instances. The amount and order of elements will
+        be the same as of FacebookRequest instances. FacebookRequest without errors will have None as their value
+        in the respective index.
+
+        :return: a list of FacebookBatchRequestError instances and/or None.
+        """
+        return self._errors
+
+    @retry()
+    def execute(self) -> 'FacebookBatch':
+        """
+        Execute all requests. This method will be retried for any failed transient errors. For such we employ an
         exponential backoff approach.
 
         The exponential back off defaults to wait 2^x * 1 seconds between each retry, up to 10 seconds, then 10
@@ -119,9 +150,10 @@ class FacebookBatch:
         self._batch = self._api.new_batch()
 
         for request_index, request in enumerate(self._requests):
-            response = self._responses[request_index]
+            response = self.responses[request_index]
+            error = self.errors[request_index]
 
-            if response is None:
+            if (response is None and error is None) or (error and error.is_transient):
                 self._batch.add_request(
                     request,
                     success=partial(
@@ -216,7 +248,7 @@ class FacebookBatchUploader:
         self._requests = requests
         self._batches = []
 
-    def execute(self, chunk_size: int = 50):
+    def execute(self, chunk_size: int = 50) -> 'FacebookBatchUploader':
         """
         Execute all requests in batches of chunk_size amount.
 
@@ -224,7 +256,7 @@ class FacebookBatchUploader:
             (Optional) The amount of requests per chunk. Keep in mind this value should be between 1 and 50, otherwise
             an exception will be raised. Defaults to 50.
         :raises: BatchExecutionError: when one or more requests failed.
-        :return:
+        :return: self.
         """
         num_requests = len(self.requests)
 
@@ -248,6 +280,8 @@ class FacebookBatchUploader:
             )
             raise BatchExecutionError(exception_msg)
 
+        return self
+
     @property
     def requests(self) -> List[FacebookRequest]:
         """
@@ -267,7 +301,7 @@ class FacebookBatchUploader:
         :return: a list of FacebookBatchResponse instance and/or None.
         """
         for batch in self._batches:
-            for response in batch._responses:
+            for response in batch.responses:
                 yield response
 
     @property
@@ -280,7 +314,7 @@ class FacebookBatchUploader:
         :return: a generator of FacebookBatchRequestError instances and/or None.
         """
         for batch in self._batches:
-            for response in batch._errors:
+            for response in batch.errors:
                 yield response
 
     @property
