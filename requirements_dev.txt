@@ -12,3 +12,4 @@ pytest==5.3.4
 pytest-runner==5.2
 black==19.10b0
 flake8-black==0.1.1
+pre-commit==2.0.1
