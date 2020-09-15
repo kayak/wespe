@@ -1,3 +1,2 @@
-facebook_business==5.0.4
-requests==2.22.0
-tenacity==5.0.2
+facebook_business==8.0.3
+tenacity==6.2.0
