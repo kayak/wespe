@@ -1,2 +1,2 @@
-facebook_business==8.0.3
+facebook_business==16.0.0
 tenacity==6.2.0
